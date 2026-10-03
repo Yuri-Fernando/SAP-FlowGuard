@@ -1,0 +1,47 @@
+{
+  "name": "WF-01 SD Order-to-Cash Monitor",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "7b0fd8f4-f208-49f7-816e-27334f966c5e",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 220]
+    },
+    {
+      "parameters": {"rule": {"interval": [{"field": "hours", "hoursInterval": 1}]}},
+      "id": "a40fb285-23bb-4158-8778-e28fe047915c",
+      "name": "Hourly Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 380]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.FLOWGUARD_API_URL + '/runs/o2c'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{"name": "X-Correlation-ID", "value": "={{$execution.id}}"}]
+        },
+        "options": {"timeout": 120000}
+      },
+      "id": "c70c3e2f-3386-425a-b8aa-58f185136c61",
+      "name": "Run O2C Control",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {"main": [[{"node": "Run O2C Control", "type": "main", "index": 0}]]},
+    "Hourly Schedule": {"main": [[{"node": "Run O2C Control", "type": "main", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1", "saveExecutionProgress": true},
+  "versionId": "0dd888c4-d07a-4ac9-9934-54fce889fdc8",
+  "meta": {"templateCredsSetupCompleted": true},
+  "tags": []
+}
+

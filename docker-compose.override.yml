@@ -1,0 +1,13 @@
+services:
+  flowguard-dashboard:
+    build: .
+    command: ["uvicorn", "apps.dashboard.monitor:app", "--host", "0.0.0.0", "--port", "8501"]
+    environment:
+      FLOWGUARD_API_URL: http://flowguard-api:8000
+      N8N_BASE_URL: http://n8n:5678
+      N8N_API_KEY: ${N8N_API_KEY:-}
+    depends_on:
+      flowguard-api:
+        condition: service_started
+    ports:
+      - "8501:8501"

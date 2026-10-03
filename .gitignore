@@ -1,0 +1,17 @@
+.env
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+*.db
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+.idea/
+.vscode/
+n8n_data/
+postgres_data/
+redis_data/
+

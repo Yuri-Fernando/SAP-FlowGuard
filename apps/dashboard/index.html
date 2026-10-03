@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SAP FlowGuard Control Tower</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07101d; --panel: #0e1b2c; --panel-2: #122238; --line: #233852;
+      --text: #edf3fb; --muted: #8fa5bf; --green: #43d39e; --red: #ff6b78;
+      --amber: #ffb454; --blue: #64a8ff;
+      font-family: Inter, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(circle at top right, #102b43, var(--bg) 40%); color: var(--text); }
+    main { max-width: 1320px; margin: 0 auto; padding: 28px; }
+    header { display: flex; justify-content: space-between; gap: 20px; align-items: center; }
+    h1 { margin: 0; font-size: 28px; } h2 { font-size: 18px; margin: 0 0 14px; }
+    .subtitle, .muted { color: var(--muted); } .subtitle { margin-top: 5px; }
+    button { background: var(--blue); border: 0; color: #04111f; font-weight: 700; padding: 10px 16px; border-radius: 8px; cursor: pointer; }
+    .statusbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0; }
+    .pill { border: 1px solid var(--line); background: var(--panel); padding: 7px 10px; border-radius: 999px; font-size: 13px; }
+    .ok { color: var(--green); } .bad { color: var(--red); } .warn { color: var(--amber); }
+    .cards { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 14px; }
+    .card, section { background: rgba(14, 27, 44, .94); border: 1px solid var(--line); border-radius: 12px; }
+    .card { padding: 18px; } .label { color: var(--muted); font-size: 13px; }
+    .value { font-size: 28px; font-weight: 750; margin-top: 7px; }
+    .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; margin: 18px 0; }
+    .flow div { background: var(--panel-2); border: 1px solid var(--line); border-radius: 9px; padding: 13px; text-align: center; position: relative; }
+    .flow div:not(:last-child)::after { content: "→"; position: absolute; right: -18px; color: var(--blue); }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    section { padding: 18px; overflow: hidden; } .wide { grid-column: 1 / -1; }
+    .table-wrap { overflow: auto; max-height: 360px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    th { color: var(--muted); position: sticky; top: 0; background: var(--panel); }
+    .empty { color: var(--muted); padding: 18px 0; } #error { display: none; margin: 16px 0; padding: 12px; border: 1px solid #71313a; background: #351a22; border-radius: 8px; }
+    footer { color: var(--muted); margin-top: 18px; font-size: 12px; }
+    @media (max-width: 950px) { .cards { grid-template-columns: repeat(2, 1fr); } .grid { grid-template-columns: 1fr; } .wide { grid-column: auto; } }
+    @media (max-width: 600px) { main { padding: 16px; } header { align-items: flex-start; } .cards, .flow { grid-template-columns: 1fr; } .flow div::after { display: none; } }
+  </style>
+</head>
+<body><main>
+  <header><div><h1>SAP FlowGuard</h1><div class="subtitle">FI / SD / MM · n8n Flow Monitor & Exception Control Tower</div></div><button onclick="loadData()">Atualizar</button></header>
+  <div id="error"></div>
+  <div class="statusbar">
+    <span class="pill">FlowGuard API: <b id="apiStatus">–</b></span>
+    <span class="pill">SAP provider: <b id="sapStatus">–</b></span>
+    <span class="pill">n8n: <b id="n8nStatus">–</b></span>
+    <span class="pill">Última leitura: <b id="updatedAt">–</b></span>
+  </div>
+  <div class="cards">
+    <div class="card"><div class="label">Exceções abertas</div><div class="value" id="open">–</div></div>
+    <div class="card"><div class="label">Críticas</div><div class="value bad" id="critical">–</div></div>
+    <div class="card"><div class="label">Valor em risco</div><div class="value" id="risk">–</div></div>
+    <div class="card"><div class="label">Aprovações pendentes</div><div class="value warn" id="pending">–</div></div>
+    <div class="card"><div class="label">Workflows n8n ativos</div><div class="value" id="activeWorkflows">–</div></div>
+  </div>
+  <section class="wide" style="margin-top:16px"><h2>Fluxo monitorado</h2><div class="flow"><div>n8n<br><small class="muted">orquestração</small></div><div>FlowGuard API<br><small class="muted">correlação e regras</small></div><div>SAP Provider<br><small class="muted">mock / sandbox / hybrid</small></div><div>PostgreSQL<br><small class="muted">exceções e auditoria</small></div></div></section>
+  <div class="grid">
+    <section><h2>Workflows n8n</h2><div class="table-wrap"><table><thead><tr><th>Nome</th><th>ID</th><th>Ativo</th><th>Atualizado</th></tr></thead><tbody id="workflowRows"></tbody></table><div class="empty" id="workflowEmpty"></div></div></section>
+    <section><h2>Execuções recentes do n8n</h2><div class="table-wrap"><table><thead><tr><th>ID</th><th>Workflow</th><th>Status</th><th>Modo</th><th>Início</th></tr></thead><tbody id="executionRows"></tbody></table><div class="empty" id="executionEmpty"></div></div></section>
+    <section class="wide"><h2>Exceções FI / SD / MM</h2><div class="table-wrap"><table><thead><tr><th>Regra</th><th>Documento</th><th>Processo</th><th>Severidade</th><th>Risco</th><th>Status</th></tr></thead><tbody id="exceptionRows"></tbody></table></div></section>
+    <section class="wide"><h2>Aprovações</h2><div class="table-wrap"><table><thead><tr><th>ID</th><th>Ação</th><th>Estado</th><th>Solicitante</th><th>Data</th></tr></thead><tbody id="approvalRows"></tbody></table><div class="empty" id="approvalEmpty"></div></div></section>
+  </div>
+  <footer>Atualização automática a cada 15 segundos. A API key do n8n permanece somente no backend do dashboard.</footer>
+</main><script>
+const esc = value => String(value ?? "–").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const date = value => value ? new Date(value).toLocaleString("pt-BR") : "–";
+const stateClass = value => ["success","ok","APPROVED","EXECUTED"].includes(value) ? "ok" : ["error","failed","CRITICAL","REJECTED","FAILED"].includes(value) ? "bad" : "warn";
+function rows(target, items, render, emptyTarget, emptyText) { document.getElementById(target).innerHTML = items.map(render).join(""); if (emptyTarget) document.getElementById(emptyTarget).textContent = items.length ? "" : emptyText; }
+async function loadData() {
+  try {
+    const response = await fetch("/api/summary", {cache:"no-store"}); const d = await response.json(); if (!response.ok) throw new Error(d.detail || response.statusText);
+    error.style.display="none"; apiStatus.textContent=d.api.online?"online":"offline"; apiStatus.className=d.api.online?"ok":"bad";
+    sapStatus.textContent=`${d.api.sap_mode || "–"} / ${d.api.provider_healthy?"online":"degradado"}`; sapStatus.className=d.api.provider_healthy?"ok":"warn";
+    n8nStatus.textContent=d.n8n.online?(d.n8n.api_configured?"online + API":"online / sem API key"):"offline"; n8nStatus.className=d.n8n.online?"ok":"bad"; updatedAt.textContent=date(d.updated_at);
+    open.textContent=d.metrics.open; critical.textContent=d.metrics.critical; pending.textContent=d.metrics.pending_approvals; activeWorkflows.textContent=d.metrics.active_workflows;
+    risk.textContent=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(d.metrics.amount_at_risk);
+    rows("workflowRows",d.n8n.workflows,w=>`<tr><td>${esc(w.name)}</td><td>${esc(w.id)}</td><td class="${w.active?'ok':'muted'}">${w.active?'sim':'não'}</td><td>${date(w.updatedAt)}</td></tr>`,"workflowEmpty",d.n8n.message);
+    rows("executionRows",d.n8n.executions,e=>`<tr><td>${esc(e.id)}</td><td>${esc(e.workflowId)}</td><td class="${stateClass(e.status)}">${esc(e.status)}</td><td>${esc(e.mode)}</td><td>${date(e.startedAt)}</td></tr>`,"executionEmpty",d.n8n.message);
+    rows("exceptionRows",d.exceptions,x=>`<tr><td>${esc(x.rule_id)}</td><td>${esc(x.source_document_id)}</td><td>${esc(x.process)}</td><td class="${stateClass(x.severity)}">${esc(x.severity)}</td><td>${esc(x.currency)} ${esc(x.amount_at_risk)}</td><td>${esc(x.status)}</td></tr>`);
+    rows("approvalRows",d.approvals,a=>`<tr><td>${esc(a.approval_id)}</td><td>${esc(a.action)}</td><td class="${stateClass(a.state)}">${esc(a.state)}</td><td>${esc(a.requested_by)}</td><td>${date(a.requested_at)}</td></tr>`,"approvalEmpty","Nenhuma aprovação registrada.");
+  } catch (e) { error.textContent=`Falha ao atualizar dashboard: ${e.message}`; error.style.display="block"; }
+}
+loadData(); setInterval(loadData,15000);
+</script></body></html>
+

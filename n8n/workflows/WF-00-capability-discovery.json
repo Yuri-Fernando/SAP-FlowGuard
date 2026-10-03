@@ -1,0 +1,35 @@
+{
+  "name": "WF-00 SAP Health and Capability Discovery",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "2a716773-c43e-4481-ab44-5a64e53f5cd3",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.FLOWGUARD_API_URL + '/capabilities'}}",
+        "options": {"timeout": 30000}
+      },
+      "id": "d88c61ae-5a83-40df-8a35-b69a62844099",
+      "name": "Discover SAP Capabilities",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{"node": "Discover SAP Capabilities", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "versionId": "d10824b4-8ca1-4818-853f-c3b31ad64c53",
+  "meta": {"templateCredsSetupCompleted": true},
+  "tags": []
+}
+

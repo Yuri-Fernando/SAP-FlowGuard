@@ -1,0 +1,38 @@
+{
+  "name": "WF-02 MM Procure-to-Pay Monitor",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "ff8b7279-a91a-4c83-b0ef-3efdb82d7886",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.FLOWGUARD_API_URL + '/runs/p2p'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{"name": "X-Correlation-ID", "value": "={{$execution.id}}"}]
+        },
+        "options": {"timeout": 120000}
+      },
+      "id": "22102576-c4c6-4f8e-b0d2-09ba8fb89a3d",
+      "name": "Run P2P Control",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {"main": [[{"node": "Run P2P Control", "type": "main", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1", "saveExecutionProgress": true},
+  "versionId": "75ea2cb5-1dda-49a4-a444-36582d52ff63",
+  "meta": {"templateCredsSetupCompleted": true},
+  "tags": []
+}
+

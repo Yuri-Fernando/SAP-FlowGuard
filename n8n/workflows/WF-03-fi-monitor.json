@@ -1,0 +1,34 @@
+{
+  "name": "WF-03 FI Journal Monitor",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "905e8525-7121-4700-acf0-61cf3d4ac10a",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.FLOWGUARD_API_URL + '/runs/fi'}}",
+        "options": {"timeout": 120000}
+      },
+      "id": "0331d44e-0207-413d-beb9-1cd7a066238f",
+      "name": "Run FI Control",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {"main": [[{"node": "Run FI Control", "type": "main", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1", "saveExecutionProgress": true},
+  "versionId": "401c356c-635f-4336-99e6-86a64998ece6",
+  "meta": {"templateCredsSetupCompleted": true},
+  "tags": []
+}
+
